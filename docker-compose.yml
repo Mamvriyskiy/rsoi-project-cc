@@ -1,7 +1,7 @@
 version: "3"
 services:
-  postgres:
-    image: library/postgres:15
+  postgres-service:
+    image: library/postgres:13
     container_name: postgres
     restart: on-failure
     environment:
@@ -13,34 +13,142 @@ services:
       - ./postgres/:/docker-entrypoint-initdb.d/
     ports:
       - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.3.2
-    container_name: zookeeper
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
     ports:
-      - "22181:2181"
+      - "31000:31000"
+    depends_on:
+      postgres-service:
+        condition: service_healthy
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2180
+      ZOOKEEPER_TICK_TIME: 2000
+      KAFKA_JMX_HOSTNAME: "localhost"
+      KAFKA_JMX_PORT: 31000
 
   kafka:
     image: confluentinc/cp-kafka:7.3.2
-    container_name: kafka-1
     ports:
       - "9092:9092"
+      - "31001:31001"
+    depends_on:
+      zookeeper:
+        condition: service_started
+      postgres-service:
+        condition: service_healthy
     environment:
       KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2180
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 100
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-    depends_on:
-      - zookeeper
+      KAFKA_JMX_HOSTNAME: "localhost"
+      KAFKA_JMX_PORT: 31001
 
-# TODO добавить сервисы
+  statistics-service:
+    image: iraalf/statistics-service
+    build:
+      context: src/statistics
+    ports:
+      - "8030:8030"
+    depends_on:
+      kafka:
+        condition: service_started
+      postgres-service:
+        condition: service_healthy
+    links:
+      - postgres-service
+    restart: on-failure
+
+  identity-provider-service:
+    image: iraalf/identity-provider-service
+    build:
+      context: src/identity-provider
+      args:
+        OKTA_CLIENT_SECRET: "yVEFFGdhYe16oCGV2z1Z9lZCiRxfDtcU8dlvi0IrdXhklFIRJWksggqE67HxdsrL"
+        OKTA_SSWS_TOKEN: "00T26yt0uiknlKjQ65d7"
+    depends_on:
+      kafka:
+        condition: service_started
+      postgres-service:
+        condition: service_healthy
+    ports:
+      - "8040:8040"
+    restart: on-failure
+
+  privileges-service:
+    image: iraalf/privileges-service
+    build:
+      context: src/privileges
+    ports:
+      - "8050:8050"
+    depends_on:
+      postgres-service:
+        condition: service_healthy
+    links:
+      - postgres-service
+    restart: on-failure
+
+  flights-service:
+    image: iraalf/flights-service
+    build:
+      context: src/flights
+    ports:
+      - "8060:8060"
+    depends_on:
+      postgres-service:
+        condition: service_healthy
+    links:
+      - postgres-service
+    restart: on-failure
+
+  tickets-service:
+    image: iraalf/tickets-service
+    build:
+      context: src/tickets
+    ports:
+      - "8070:8070"
+    depends_on:
+      postgres-service:
+        condition: service_healthy
+    links:
+      - postgres-service
+    restart: on-failure
+
+  gateway-service:
+    image: iraalf/gateway-service
+    build:
+      context: src/gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      - identity-provider-service
+      - flights-service
+      - privileges-service
+      - tickets-service
+    restart: on-failure
+
+  frontend-service:
+    image: iraalf/frontend-service
+    build:
+      context: src/frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - gateway-service
+    restart: on-failure
 
 volumes:
   db-data:

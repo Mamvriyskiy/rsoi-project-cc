@@ -6,3 +6,9 @@ GRANT ALL PRIVILEGES ON DATABASE flights TO program;
 
 CREATE DATABASE privileges;
 GRANT ALL PRIVILEGES ON DATABASE privileges TO program;
+
+CREATE DATABASE identity_provider;
+GRANT ALL PRIVILEGES ON DATABASE identity_provider TO program;
+
+CREATE DATABASE staistics;
+GRANT ALL PRIVILEGES ON DATABASE staistics TO program;
