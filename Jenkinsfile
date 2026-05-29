@@ -34,7 +34,6 @@ pipeline {
     agent any
 
     options {
-        timestamps()
         ansiColor('xterm')
         disableConcurrentBuilds()
     }
@@ -104,7 +103,7 @@ pipeline {
                 script {
                     if (params.DOCKER_REGISTRY_CREDENTIALS_ID.trim()) {
                         withCredentials([usernamePassword(credentialsId: params.DOCKER_REGISTRY_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASSWORD')]) {
-                            sh "printf '%s' \"${DOCKER_PASSWORD}\" | docker login '${params.IMAGE_REGISTRY}' --username \"${DOCKER_USER}\" --password-stdin"
+                            sh "printf '%s' \"\$DOCKER_PASSWORD\" | docker login '${params.IMAGE_REGISTRY}' --username \"\$DOCKER_USER\" --password-stdin"
                         }
                     }
 
