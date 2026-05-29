@@ -131,8 +131,8 @@ pipeline {
                         sh """
                             set -eu
                             ${contextSwitch}
-                            
-                            echo "KUBECONFIG=\$KUBECONFIG"
+
+                            echo "KUBECONFIG=\${KUBECONFIG:-<not set>}"
                             kubectl config current-context || true
                             kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}{"\\n"}' || true
                             kubectl cluster-info || true
