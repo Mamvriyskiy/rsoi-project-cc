@@ -26,5 +26,5 @@ docker exec rsoi-jenkins cat /var/jenkins_home/secrets/initialAdminPassword
 4. опционально пушит образы в registry;
 5. разворачивает `postgres`, `kafka` и все сервисы в Kubernetes через Helm.
 
-Для локального Docker Desktop Kubernetes оставь `IMAGE_REGISTRY` пустым и `PUSH_IMAGES=false`.
+Для локального kind-кластера оставь `IMAGE_REGISTRY` пустым, `PUSH_IMAGES=false`, `KUBE_CONTEXT=kind-rsoi` и `KUBECONFIG_CREDENTIALS_ID=local-kubeconfig`.
 Для внешнего кластера укажи `IMAGE_REGISTRY`, `IMAGE_NAMESPACE`, включи `PUSH_IMAGES` и добавь kubeconfig как Jenkins file credential, затем передай его id в `KUBECONFIG_CREDENTIALS_ID`.

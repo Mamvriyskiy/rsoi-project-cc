@@ -46,8 +46,8 @@ pipeline {
         string(name: 'DOCKER_REGISTRY_CREDENTIALS_ID', defaultValue: '', description: 'Optional username/password credentials id for docker login.')
         booleanParam(name: 'DEPLOY_TO_K8S', defaultValue: true, description: 'Deploy Helm releases to Kubernetes.')
         string(name: 'KUBE_NAMESPACE', defaultValue: 'rsoi', description: 'Kubernetes namespace.')
-        string(name: 'KUBE_CONTEXT', defaultValue: '', description: 'Optional kubectl context.')
-        string(name: 'KUBECONFIG_CREDENTIALS_ID', defaultValue: '', description: 'Optional Jenkins file credential id with kubeconfig.')
+        string(name: 'KUBE_CONTEXT', defaultValue: 'kind-rsoi', description: 'kubectl context.')
+        string(name: 'KUBECONFIG_CREDENTIALS_ID', defaultValue: 'local-kubeconfig', description: 'Jenkins file credential id with kubeconfig.')
         string(name: 'OKTA_CLIENT_SECRET', defaultValue: '', description: 'Optional build arg for identity-provider.')
         string(name: 'OKTA_SSWS_TOKEN', defaultValue: '', description: 'Optional build arg for identity-provider.')
     }
@@ -122,11 +122,15 @@ pipeline {
             }
             steps {
                 script {
+                    def kubeconfigCredentialsId = params.KUBECONFIG_CREDENTIALS_ID?.trim() ?: 'local-kubeconfig'
+
                     def deployScript = {
+                        def kubeNamespace = params.KUBE_NAMESPACE?.trim() ?: 'rsoi'
+                        def kubeContext = params.KUBE_CONTEXT?.trim() ?: 'kind-rsoi'
                         def tag = params.IMAGE_TAG.trim() ?: env.BUILD_NUMBER
                         def pullPolicy = params.PUSH_IMAGES ? 'Always' : 'IfNotPresent'
                         def overrides = helmImageOverrides(appServices, params.IMAGE_REGISTRY, params.IMAGE_NAMESPACE, tag, pullPolicy)
-                        def contextSwitch = params.KUBE_CONTEXT.trim() ? "kubectl config use-context '${params.KUBE_CONTEXT.trim()}'" : 'true'
+                        def contextSwitch = "kubectl config use-context '${kubeContext}'"
 
                         sh """
                             set -eu
@@ -137,25 +141,45 @@ pipeline {
                             kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}{"\\n"}' || true
                             kubectl cluster-info || true
 
-                            kubectl create namespace '${params.KUBE_NAMESPACE}' --dry-run=client -o yaml | kubectl apply -f -
-                            helm upgrade --install postgres k8s/postgres-chart --namespace '${params.KUBE_NAMESPACE}'
-                            helm upgrade --install kafka k8s/kafka-chart --namespace '${params.KUBE_NAMESPACE}'
-                            helm upgrade --install services k8s/services-chart --namespace '${params.KUBE_NAMESPACE}' ${overrides}
-                            kubectl rollout status deployment/postgres --namespace '${params.KUBE_NAMESPACE}' --timeout=180s
-                            kubectl rollout status deployment/zookeeper --namespace '${params.KUBE_NAMESPACE}' --timeout=180s
-                            kubectl rollout status deployment/kafka --namespace '${params.KUBE_NAMESPACE}' --timeout=180s
-                            kubectl rollout status deployment/statistics --namespace '${params.KUBE_NAMESPACE}' --timeout=180s
-                            kubectl rollout status deployment/identity-provider --namespace '${params.KUBE_NAMESPACE}' --timeout=180s
-                            kubectl rollout status deployment/privileges --namespace '${params.KUBE_NAMESPACE}' --timeout=180s
-                            kubectl rollout status deployment/flights --namespace '${params.KUBE_NAMESPACE}' --timeout=180s
-                            kubectl rollout status deployment/tickets --namespace '${params.KUBE_NAMESPACE}' --timeout=180s
-                            kubectl rollout status deployment/gateway --namespace '${params.KUBE_NAMESPACE}' --timeout=180s
-                            kubectl rollout status deployment/frontend --namespace '${params.KUBE_NAMESPACE}' --timeout=180s
+                            kubectl create namespace '${kubeNamespace}' --dry-run=client -o yaml | kubectl apply -f -
+                            helm upgrade --install postgres k8s/postgres-chart --namespace '${kubeNamespace}'
+                            helm upgrade --install kafka k8s/kafka-chart --namespace '${kubeNamespace}'
+                            helm upgrade --install services k8s/services-chart --namespace '${kubeNamespace}' ${overrides}
+
+                            diagnose_deployment() {
+                                deployment="\$1"
+                                echo "=== Diagnostics for deployment/\${deployment} ==="
+                                kubectl get deployment "\${deployment}" --namespace '${kubeNamespace}' -o wide || true
+                                kubectl describe deployment "\${deployment}" --namespace '${kubeNamespace}' || true
+                                kubectl get pods --namespace '${kubeNamespace}' -l "app=\${deployment}" -o wide || true
+                                kubectl describe pods --namespace '${kubeNamespace}' -l "app=\${deployment}" || true
+                                kubectl logs --namespace '${kubeNamespace}' -l "app=\${deployment}" --all-containers --tail=100 || true
+                                kubectl get events --namespace '${kubeNamespace}' --sort-by=.lastTimestamp | tail -n 80 || true
+                            }
+
+                            rollout() {
+                                deployment="\$1"
+                                kubectl rollout status "deployment/\${deployment}" --namespace '${kubeNamespace}' --timeout=300s || {
+                                    diagnose_deployment "\${deployment}"
+                                    exit 1
+                                }
+                            }
+
+                            rollout postgres
+                            rollout zookeeper
+                            rollout kafka
+                            rollout statistics
+                            rollout identity-provider
+                            rollout privileges
+                            rollout flights
+                            rollout tickets
+                            rollout gateway
+                            rollout frontend
                         """
                     }
 
-                    if (params.KUBECONFIG_CREDENTIALS_ID.trim()) {
-                        withCredentials([file(credentialsId: params.KUBECONFIG_CREDENTIALS_ID, variable: 'KUBECONFIG')]) {
+                    if (kubeconfigCredentialsId) {
+                        withCredentials([file(credentialsId: kubeconfigCredentialsId, variable: 'KUBECONFIG')]) {
                             deployScript()
                         }
                     } else {

@@ -80,7 +80,8 @@ Kubernetes через Helm.
 * `IMAGE_TAG` – тег образов; если пустой, используется номер Jenkins build.
 * `PUSH_IMAGES` – включить push образов в registry.
 * `KUBE_NAMESPACE` – namespace Kubernetes, по умолчанию `rsoi`.
-* `KUBECONFIG_CREDENTIALS_ID` – id Jenkins file credential с kubeconfig для внешнего кластера.
+* `KUBE_CONTEXT` – kubectl context, по умолчанию `kind-rsoi`.
+* `KUBECONFIG_CREDENTIALS_ID` – id Jenkins file credential с kubeconfig, по умолчанию `local-kubeconfig`.
 
 ## Деплой в Kubernetes
 
