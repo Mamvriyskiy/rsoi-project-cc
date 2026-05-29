@@ -1,6 +1,7 @@
 package models
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -10,6 +11,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"time"
 )
 
@@ -47,17 +49,84 @@ func (model *FlightsM) Fetch(page int, page_size int, authHeader string) *object
 }
 
 func (model *FlightsM) Find(flight_number string, authHeader string) (*objects.FlightResponse, error) {
-	req, _ := http.NewRequest("GET", fmt.Sprintf("%s/api/v1/flights/%s", utils.Config.Endpoints.Flights, flight_number), nil)
+	req, _ := http.NewRequest("GET", fmt.Sprintf("%s/api/v1/flights/%s", utils.Config.Endpoints.Flights, url.PathEscape(flight_number)), nil)
 	req.Header.Add("Authorization", authHeader)
 	resp, err := model.client.Do(req)
 	if err != nil {
 		return nil, err
-	} else if resp.StatusCode == http.StatusNotFound {
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusNotFound {
 		return nil, errors.FlightNotFound
-	} else {
+	}
+	if resp.StatusCode != http.StatusOK {
+		body, _ := ioutil.ReadAll(resp.Body)
+		return nil, fmt.Errorf("flights service returned %d: %s", resp.StatusCode, string(body))
+	}
+
+	data := &objects.FlightResponse{}
+	body, _ := ioutil.ReadAll(resp.Body)
+	json.Unmarshal(body, data)
+	return data, nil
+}
+
+func (model *FlightsM) Create(flight *objects.FlightCreateRequest, authHeader string) (*objects.FlightResponse, error) {
+	req_body, _ := json.Marshal(flight)
+	req, _ := http.NewRequest("POST", fmt.Sprintf("%s/api/v1/flights", utils.Config.Endpoints.Flights), bytes.NewBuffer(req_body))
+	req.Header.Add("Authorization", authHeader)
+	req.Header.Add("Content-Type", "application/json")
+
+	resp, err := model.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, _ := ioutil.ReadAll(resp.Body)
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("flights service returned %d: %s", resp.StatusCode, string(body))
+	}
+
+	data := &objects.FlightResponse{}
+	json.Unmarshal(body, data)
+	return data, nil
+}
+
+func (model *FlightsM) ReserveSeat(flight_number string, authHeader string) (*objects.FlightResponse, error) {
+	return model.updateSeat(flight_number, authHeader, "reserve")
+}
+
+func (model *FlightsM) ReleaseSeat(flight_number string, authHeader string) (*objects.FlightResponse, error) {
+	return model.updateSeat(flight_number, authHeader, "release")
+}
+
+func (model *FlightsM) updateSeat(flight_number string, authHeader string, action string) (*objects.FlightResponse, error) {
+	req, _ := http.NewRequest(
+		"POST",
+		fmt.Sprintf("%s/api/v1/flights/%s/%s", utils.Config.Endpoints.Flights, url.PathEscape(flight_number), action),
+		nil,
+	)
+	req.Header.Add("Authorization", authHeader)
+
+	resp, err := model.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case http.StatusOK:
 		data := &objects.FlightResponse{}
 		body, _ := ioutil.ReadAll(resp.Body)
 		json.Unmarshal(body, data)
 		return data, nil
+	case http.StatusNotFound:
+		return nil, errors.FlightNotFound
+	case http.StatusConflict:
+		return nil, errors.NoSeatsAvailable
+	default:
+		body, _ := ioutil.ReadAll(resp.Body)
+		return nil, fmt.Errorf("flights service returned %d: %s", resp.StatusCode, string(body))
 	}
 }

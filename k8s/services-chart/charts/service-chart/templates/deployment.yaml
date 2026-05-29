@@ -1,31 +1,32 @@
+{{- $name := default .Chart.Name .Values.service.name -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Chart.Name }}
+  name: {{ $name }}
   labels:
-    app.kubernetes.io/name: {{ .Chart.Name }}
+    app.kubernetes.io/name: {{ $name }}
     app.kubernetes.io/version: "{{ .Values.service.image.version }}"
     app.kubernetes.io/component: application
     app.kubernetes.io/part-of: micro-services
     app.kubernetes.io/managed-by: helm
 spec:
-  replicas: 1
+  replicas: {{ .Values.service.replicas | default 1 }}
   selector:
     matchLabels:
-      app: {{ .Chart.Name }}
+      app: {{ $name }}
   template:
     metadata:
       labels:
-        app: {{ .Chart.Name }}
-        app.kubernetes.io/name: {{ .Chart.Name }}
+        app: {{ $name }}
+        app.kubernetes.io/name: {{ $name }}
         app.kubernetes.io/version: "{{ .Values.service.image.version }}"
         app.kubernetes.io/component: application
         app.kubernetes.io/part-of: micro-services
         app.kubernetes.io/managed-by: helm
     spec:
       containers:
-        - name: {{ .Chart.Name }}
-          imagePullPolicy: Always
+        - name: {{ $name }}
+          imagePullPolicy: {{ .Values.service.image.pullPolicy | default "IfNotPresent" }}
           image: {{ .Values.service.image.name }}:{{ .Values.service.image.version }}
           resources:
             requests:
@@ -45,7 +46,7 @@ spec:
               value: "{{ .Values.service.database.port }}"
             - name: DATABASE_USER
               value: "{{ .Values.service.database.username }}"
-            - name: DATABAES_PASSWORD
+            - name: DATABASE_PASSWORD
               value: "{{ .Values.service.database.password }}"
           ports:
             - name: web

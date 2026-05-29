@@ -547,6 +547,7 @@ ui_*.h
 *.qmlc
 *.jsc
 Makefile*
+!/Makefile
 *build-*
 *.qm
 *.prl
@@ -718,7 +719,6 @@ inc/
 /blib/
 /_eumm/
 /*.gz
-/Makefile
 /Makefile.old
 /MANIFEST.bak
 /pm_to_blib

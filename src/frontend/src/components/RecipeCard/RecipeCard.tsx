@@ -1,6 +1,6 @@
 import { Box, Link, Text } from "@chakra-ui/react";
 import React from "react";
-import { FaCalendarAlt, FaPlaneDeparture, FaRubleSign } from "react-icons/fa";
+import { FaCalendarAlt, FaPlaneDeparture, FaRubleSign, FaTicketAlt } from "react-icons/fa";
 
 import { Flight as FlightI } from "types/Flight";
 
@@ -29,10 +29,12 @@ const formatDate = (value: string) => {
 
 const RecipeCard: React.FC<FlightProps> = (props) => {
   const path = `/flights/${props.flightNumber}`;
+  const availableSeats = props.availableSeats ?? 0;
+  const isSoldOut = props.soldOut || availableSeats <= 0;
 
   return (
     <Link className={styles.link_div} href={path}>
-      <Box className={styles.main_box}>
+      <Box className={`${styles.main_box} ${isSoldOut ? styles.sold_out : ""}`}>
         <Box className={styles.card_header}>
           <Text className={styles.flight_number}>{props.flightNumber}</Text>
           <Box className={styles.price_badge}>
@@ -62,7 +64,13 @@ const RecipeCard: React.FC<FlightProps> = (props) => {
             <FaCalendarAlt />
             <Text>{formatDate(props.date)}</Text>
           </Box>
-          <Box className={styles.select_label}>Выбрать рейс</Box>
+          <Box className={styles.seats_box}>
+            <FaTicketAlt />
+            <Text>{isSoldOut ? "Все места выкуплены" : `Осталось мест: ${availableSeats}`}</Text>
+          </Box>
+          <Box className={`${styles.select_label} ${isSoldOut ? styles.select_disabled : ""}`}>
+            {isSoldOut ? "Недоступен" : "Выбрать рейс"}
+          </Box>
         </Box>
       </Box>
     </Link>

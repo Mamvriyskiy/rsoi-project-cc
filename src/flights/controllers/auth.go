@@ -34,7 +34,7 @@ func (c *Claims) Valid() error {
 func newJWKs(rawJWKS string) *keyfunc.JWKS {
 	jwksJSON := json.RawMessage(rawJWKS)
 	jwks, err := keyfunc.NewJSON(jwksJSON)
-	log.Printf("Flights: token: %s ", jwks)
+	log.Printf("Flights: JWKS: %v ", jwks)
 	if err != nil {
 		log.Printf("Error parsing token: %v", err)
 		panic(err)
@@ -79,7 +79,7 @@ func RetrieveToken(w http.ResponseWriter, r *http.Request) *Claims {
 		} else {
 			log.Printf("Error parsing token: %v", err)
 		}
-		log.Printf("JwtAccessDenied", err)
+		log.Printf("JwtAccessDenied: %v", err)
 		responses.JwtAccessDenied(w)
 		return nil
 	}
@@ -88,7 +88,7 @@ func RetrieveToken(w http.ResponseWriter, r *http.Request) *Claims {
 		responses.TokenExpired(w)
 		return nil
 	}
-	log.Printf("Flights: token: %s ", tk)
+	log.Printf("Flights: token: %v ", tk)
 	return tk
 }
 

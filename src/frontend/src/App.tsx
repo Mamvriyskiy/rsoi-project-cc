@@ -6,11 +6,6 @@ import { BrowserRouter } from "react-router-dom";
 
 import Login from "pages/Login";
 import SignUp from "pages/Signup";
-import RecipeInfoPage from "pages/Recipe/RecipeInfo";
-import UsersPage from "pages/Users/UsersPage";
-import AuthorRecipesPage from "pages/Recipe/AuthorRecipes";
-import LikedRecipesPage from "pages/Recipe/LikedRecipes";
-import CategoryPage from "pages/Category";
 
 import SearchContextProvider from "context/Search";
 import { HeaderRouter } from "components/Header";
@@ -18,6 +13,7 @@ import AllFlightsPage from "pages/Recipe/AllFlights/AllFlightsPage";
 import FlightInfoPage from "pages/Recipe/FlightInfo";
 import AllTicketsPage from "pages/Ticket/AllTickets";
 import StatisticsPage from "pages/Statistics/StatisticsPage";
+import AdminPage from "pages/Admin";
 
 
 interface HomeProps { }
@@ -45,6 +41,7 @@ function Routing() {
       <Route path="/flights/:flightNumber" element={<FlightInfoPage />} />
       <Route path="/tickets" element={<AllTicketsPage />} />
       <Route path="/statistics" element={<StatisticsPage />} />
+      <Route path="/admin" element={<AdminPage />} />
       <Route path="/flights" element={<AllFlightsPage />} />
 
       {/* <Route path="/me/likes" element={<LikedRecipesPage />} />

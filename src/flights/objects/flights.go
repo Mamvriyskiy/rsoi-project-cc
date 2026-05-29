@@ -12,14 +12,15 @@ func (Airport) TableName() string {
 }
 
 type Flight struct {
-	Id            int     `json:"id" gorm:"primary_key;index"`
-	FlightNumber  string  `json:"flightNumber"`
-	Datetime      string  `json:"datetime"`
-	FromAirport   Airport `json:"fromAirport" gorm:"foreignKey:FromAirportID"`
-	ToAirport     Airport `json:"toAirport" gorm:"foreignKey:ToAirportID"`
-	FromAirportID int     `gorm:"index"`
-	ToAirportID   int     `gorm:"index"`
-	Price         int     `json:"price"`
+	Id             int     `json:"id" gorm:"primary_key;index"`
+	FlightNumber   string  `json:"flightNumber"`
+	Datetime       string  `json:"datetime"`
+	FromAirport    Airport `json:"fromAirport" gorm:"foreignKey:FromAirportID"`
+	ToAirport      Airport `json:"toAirport" gorm:"foreignKey:ToAirportID"`
+	FromAirportID  int     `gorm:"index"`
+	ToAirportID    int     `gorm:"index"`
+	Price          int     `json:"price"`
+	AvailableSeats int     `json:"availableSeats" gorm:"not null;default:0"`
 }
 
 func (Flight) TableName() string {
@@ -35,11 +36,13 @@ func formatAirport(airport Airport) string {
 
 func (flight *Flight) ToFilghtResponse() *FilghtResponse {
 	return &FilghtResponse{
-		flight.FlightNumber,
-		formatAirport(flight.FromAirport),
-		formatAirport(flight.ToAirport),
-		flight.Datetime,
-		flight.Price,
+		FlightNumber:   flight.FlightNumber,
+		FromAirport:    formatAirport(flight.FromAirport),
+		ToAirport:      formatAirport(flight.ToAirport),
+		Date:           flight.Datetime,
+		Price:          flight.Price,
+		AvailableSeats: flight.AvailableSeats,
+		SoldOut:        flight.AvailableSeats <= 0,
 	}
 }
 
@@ -52,11 +55,22 @@ func ToFilghtResponses(flights []Flight) []FilghtResponse {
 }
 
 type FilghtResponse struct {
-	FlightNumber string `json:"flightNumber"`
-	FromAirport  string `json:"fromAirport"`
-	ToAirport    string `json:"toAirport"`
-	Date         string `json:"date"`
-	Price        int    `json:"price"`
+	FlightNumber   string `json:"flightNumber"`
+	FromAirport    string `json:"fromAirport"`
+	ToAirport      string `json:"toAirport"`
+	Date           string `json:"date"`
+	Price          int    `json:"price"`
+	AvailableSeats int    `json:"availableSeats"`
+	SoldOut        bool   `json:"soldOut"`
+}
+
+type CreateRequest struct {
+	FlightNumber   string `json:"flightNumber"`
+	FromAirport    string `json:"fromAirport"`
+	ToAirport      string `json:"toAirport"`
+	Date           string `json:"date"`
+	Price          int    `json:"price"`
+	AvailableSeats int    `json:"availableSeats"`
 }
 
 type PaginationResponse struct {

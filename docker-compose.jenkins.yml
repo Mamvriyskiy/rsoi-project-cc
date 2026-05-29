@@ -1,0 +1,25 @@
+name: rsoi-jenkins
+
+services:
+  jenkins:
+    build:
+      context: ./jenkins
+      dockerfile: Dockerfile
+    image: rsoi-jenkins:local
+    container_name: rsoi-jenkins
+    restart: unless-stopped
+    user: root
+    environment:
+      JAVA_OPTS: "-Djenkins.install.runSetupWizard=false"
+      JENKINS_ADMIN_ID: "${JENKINS_ADMIN_ID:-admin}"
+      JENKINS_ADMIN_PASSWORD: "${JENKINS_ADMIN_PASSWORD:-admin}"
+    ports:
+      - "127.0.0.1:8081:8080"
+      - "127.0.0.1:50000:50000"
+    volumes:
+      - jenkins-home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+      - .:/workspace/rsoi-project-cc
+
+volumes:
+  jenkins-home:

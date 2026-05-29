@@ -2,6 +2,7 @@ import axiosBackend from "..";
 
 interface resp {
     status: number
+    message?: string
 }
 
 type Request = {
@@ -16,9 +17,16 @@ const CreateTicket = async function(flight: string, price: number, fromBalance: 
         price: price,
         paidFromBalance: fromBalance,
     }
-    const response = await axiosBackend.post(`/tickets`, data);
-    return {
-        status: response.status
-    };
+    try {
+        const response = await axiosBackend.post(`/tickets`, data);
+        return {
+            status: response.status
+        };
+    } catch (error: any) {
+        return {
+            status: error?.response?.status || 500,
+            message: error?.response?.data || "Ошибка покупки билета",
+        };
+    }
 }
 export default CreateTicket;

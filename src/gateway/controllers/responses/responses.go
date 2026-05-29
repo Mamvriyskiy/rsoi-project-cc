@@ -28,6 +28,12 @@ func BadRequest(w http.ResponseWriter, msg string) {
 	json.NewEncoder(w).Encode(msg)
 }
 
+func Conflict(w http.ResponseWriter, msg string) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.WriteHeader(http.StatusConflict)
+	json.NewEncoder(w).Encode(msg)
+}
+
 func Forbidden(w http.ResponseWriter) {
 	w.WriteHeader(http.StatusForbidden)
 }

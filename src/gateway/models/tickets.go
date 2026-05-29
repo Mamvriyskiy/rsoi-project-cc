@@ -18,10 +18,11 @@ type TicketsM struct {
 	privileges *PrivilegesM
 }
 
-func NewTicketsM(client *http.Client, flights *FlightsM) *TicketsM {
+func NewTicketsM(client *http.Client, flights *FlightsM, privileges *PrivilegesM) *TicketsM {
 	return &TicketsM{
-		client:  client,
-		flights: flights,
+		client:     client,
+		flights:    flights,
+		privileges: privileges,
 	}
 }
 
@@ -100,15 +101,18 @@ func (model *TicketsM) create(flight_number string, price int, authHeader string
 }
 
 func (model *TicketsM) Create(flight_number string, authHeader string, price int, from_balance bool) (*objects.TicketPurchaseResponse, error) {
-	flight, err := model.flights.Find(flight_number, authHeader)
+	flight, err := model.flights.ReserveSeat(flight_number, authHeader)
 	if err != nil {
 		utils.Logger.Println(err.Error())
 		return nil, err
 	}
 
-	ticket, err := model.create(flight_number, price, authHeader)
+	ticket, err := model.create(flight_number, flight.Price, authHeader)
 	if err != nil {
 		utils.Logger.Println(err.Error())
+		if _, releaseErr := model.flights.ReleaseSeat(flight_number, authHeader); releaseErr != nil {
+			utils.Logger.Println(releaseErr.Error())
+		}
 		return nil, err
 	}
 
@@ -119,6 +123,12 @@ func (model *TicketsM) Create(flight_number string, authHeader string, price int
 	})
 	if err != nil {
 		utils.Logger.Println(err.Error())
+		if deleteErr := model.delete(ticket.TicketUid, authHeader); deleteErr != nil {
+			utils.Logger.Println(deleteErr.Error())
+		}
+		if _, releaseErr := model.flights.ReleaseSeat(flight_number, authHeader); releaseErr != nil {
+			utils.Logger.Println(releaseErr.Error())
+		}
 		return nil, err
 	}
 
@@ -169,8 +179,14 @@ func (model *TicketsM) Delete(ticket_uid string, username string, authHeader str
 	} else if username != ticket.Username {
 		return errors.ForbiddenTicket
 	}
+	if ticket.Status == "CANCELED" {
+		return nil
+	}
 
 	if err = model.delete(ticket_uid, authHeader); err != nil {
+		return err
+	}
+	if _, err = model.flights.ReleaseSeat(ticket.FlightNumber, authHeader); err != nil {
 		return err
 	}
 

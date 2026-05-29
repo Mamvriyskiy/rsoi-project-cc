@@ -1,9 +1,11 @@
 package controllers
 
 import (
+	"encoding/json"
 	"gateway/controllers/responses"
 	"gateway/errors"
 	"gateway/models"
+	"gateway/objects"
 	"strconv"
 
 	"net/http"
@@ -18,6 +20,7 @@ type flightCtrl struct {
 func InitFlights(r *mux.Router, flights *models.FlightsM) {
 	ctrl := &flightCtrl{flights}
 	r.HandleFunc("/flights", ctrl.fetch).Methods("GET")
+	r.HandleFunc("/flights", ctrl.create).Methods("POST")
 	r.HandleFunc("/flights/{flightNumber}", ctrl.get).Methods("GET")
 }
 
@@ -42,4 +45,21 @@ func (ctrl *flightCtrl) get(w http.ResponseWriter, r *http.Request) {
 	default:
 		responses.InternalError(w)
 	}
+}
+
+func (ctrl *flightCtrl) create(w http.ResponseWriter, r *http.Request) {
+	req_body := new(objects.FlightCreateRequest)
+	err := json.NewDecoder(r.Body).Decode(req_body)
+	if err != nil {
+		responses.ValidationErrorResponse(w, err.Error())
+		return
+	}
+
+	data, err := ctrl.flights.Create(req_body, r.Header.Get("Authorization"))
+	if err != nil {
+		responses.InternalError(w)
+		return
+	}
+
+	responses.JsonSuccess(w, data)
 }

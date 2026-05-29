@@ -46,20 +46,20 @@ func initDBConnection(cnf utils.DBConfiguration) *gorm.DB {
 	}
 
 	flights := []objects.Flight{
-		{Id: 1, FlightNumber: "AFL031", Datetime: "2026-06-03 20:00", FromAirportID: 2, ToAirportID: 1, Price: 1500},
-		{Id: 2, FlightNumber: "SBI117", Datetime: "2026-06-04 09:30", FromAirportID: 1, ToAirportID: 4, Price: 6200},
-		{Id: 3, FlightNumber: "DP408", Datetime: "2026-06-05 12:15", FromAirportID: 4, ToAirportID: 1, Price: 5800},
-		{Id: 4, FlightNumber: "AFL204", Datetime: "2026-06-06 07:45", FromAirportID: 1, ToAirportID: 3, Price: 3400},
-		{Id: 5, FlightNumber: "U6132", Datetime: "2026-06-07 18:20", FromAirportID: 3, ToAirportID: 6, Price: 4100},
-		{Id: 6, FlightNumber: "SBI532", Datetime: "2026-06-08 22:10", FromAirportID: 6, ToAirportID: 5, Price: 7600},
-		{Id: 7, FlightNumber: "AFL770", Datetime: "2026-06-09 10:05", FromAirportID: 5, ToAirportID: 2, Price: 8900},
-		{Id: 8, FlightNumber: "DP219", Datetime: "2026-06-10 16:40", FromAirportID: 2, ToAirportID: 4, Price: 7200},
-		{Id: 9, FlightNumber: "S7018", Datetime: "2026-06-11 08:10", FromAirportID: 1, ToAirportID: 8, Price: 5400},
-		{Id: 10, FlightNumber: "AFL512", Datetime: "2026-06-12 14:55", FromAirportID: 8, ToAirportID: 2, Price: 6100},
-		{Id: 11, FlightNumber: "DP344", Datetime: "2026-06-13 11:25", FromAirportID: 7, ToAirportID: 1, Price: 4900},
-		{Id: 12, FlightNumber: "U6406", Datetime: "2026-06-14 19:35", FromAirportID: 1, ToAirportID: 7, Price: 5300},
-		{Id: 13, FlightNumber: "SBI884", Datetime: "2026-06-15 06:50", FromAirportID: 5, ToAirportID: 4, Price: 9800},
-		{Id: 14, FlightNumber: "AFL955", Datetime: "2026-06-16 21:15", FromAirportID: 4, ToAirportID: 8, Price: 8700},
+		{Id: 1, FlightNumber: "AFL031", Datetime: "2026-06-03 20:00", FromAirportID: 2, ToAirportID: 1, Price: 1500, AvailableSeats: randomSeats()},
+		{Id: 2, FlightNumber: "SBI117", Datetime: "2026-06-04 09:30", FromAirportID: 1, ToAirportID: 4, Price: 6200, AvailableSeats: randomSeats()},
+		{Id: 3, FlightNumber: "DP408", Datetime: "2026-06-05 12:15", FromAirportID: 4, ToAirportID: 1, Price: 5800, AvailableSeats: randomSeats()},
+		{Id: 4, FlightNumber: "AFL204", Datetime: "2026-06-06 07:45", FromAirportID: 1, ToAirportID: 3, Price: 3400, AvailableSeats: randomSeats()},
+		{Id: 5, FlightNumber: "U6132", Datetime: "2026-06-07 18:20", FromAirportID: 3, ToAirportID: 6, Price: 4100, AvailableSeats: randomSeats()},
+		{Id: 6, FlightNumber: "SBI532", Datetime: "2026-06-08 22:10", FromAirportID: 6, ToAirportID: 5, Price: 7600, AvailableSeats: randomSeats()},
+		{Id: 7, FlightNumber: "AFL770", Datetime: "2026-06-09 10:05", FromAirportID: 5, ToAirportID: 2, Price: 8900, AvailableSeats: randomSeats()},
+		{Id: 8, FlightNumber: "DP219", Datetime: "2026-06-10 16:40", FromAirportID: 2, ToAirportID: 4, Price: 7200, AvailableSeats: randomSeats()},
+		{Id: 9, FlightNumber: "S7018", Datetime: "2026-06-11 08:10", FromAirportID: 1, ToAirportID: 8, Price: 5400, AvailableSeats: randomSeats()},
+		{Id: 10, FlightNumber: "AFL512", Datetime: "2026-06-12 14:55", FromAirportID: 8, ToAirportID: 2, Price: 6100, AvailableSeats: randomSeats()},
+		{Id: 11, FlightNumber: "DP344", Datetime: "2026-06-13 11:25", FromAirportID: 7, ToAirportID: 1, Price: 4900, AvailableSeats: randomSeats()},
+		{Id: 12, FlightNumber: "U6406", Datetime: "2026-06-14 19:35", FromAirportID: 1, ToAirportID: 7, Price: 5300, AvailableSeats: randomSeats()},
+		{Id: 13, FlightNumber: "SBI884", Datetime: "2026-06-15 06:50", FromAirportID: 5, ToAirportID: 4, Price: 9800, AvailableSeats: randomSeats()},
+		{Id: 14, FlightNumber: "AFL955", Datetime: "2026-06-16 21:15", FromAirportID: 4, ToAirportID: 8, Price: 8700, AvailableSeats: randomSeats()},
 	}
 	for _, flight := range flights {
 		db.Save(&flight)
@@ -68,6 +68,10 @@ func initDBConnection(cnf utils.DBConfiguration) *gorm.DB {
 	db.Exec("SELECT setval(pg_get_serial_sequence('flight', 'id'), COALESCE((SELECT MAX(id) FROM flight), 1), true)")
 
 	return db
+}
+
+func randomSeats() int {
+	return rand.Intn(46) + 5
 }
 
 func main() {

@@ -25,7 +25,7 @@ const Navbar: React.FC<NavbarProps> = () => {
     return (
     <Box className={styles.navbar}>
         <Box className={styles.navpages}> {items.map(item =>
-            <Link key={item.name} href={item.ref}> {item.name} </Link>
+            <Link key={item.name} className={styles.navlink} href={item.ref}> {item.name} </Link>
         )} </Box>
         { role !== '' && <AuthActions login={login} logout={logout} />}
         { role === '' && <NoauthActions /> }

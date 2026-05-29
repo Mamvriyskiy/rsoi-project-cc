@@ -1,55 +1,80 @@
 frontend:
   service:
+    name: frontend
+    replicas: 1
     port: 3000
     image:
       name: fairay/rsoi-lab5-frontend
       version: latest
+      pullPolicy: IfNotPresent
     ingress:
       enabled: true
       path: /
       pathType: Prefix
 statistics:
   service:
+    name: statistics
+    replicas: 1
     port: 8030
     image:
       name: fairay/rsoi-lab5-statistics
       version: latest
+      pullPolicy: IfNotPresent
+    database:
+      name: staistics
 identity-provider:
   service:
+    name: identity-provider
+    replicas: 1
     port: 8040
     image:
       name: fairay/rsoi-lab5-identity-provider
       version: latest
+      pullPolicy: IfNotPresent
+    database:
+      name: identity_provider
 privileges:
   service:
+    name: privileges
+    replicas: 1
     port: 8050
     image:
       name: fairay/rsoi-lab5-privileges
       version: latest
+      pullPolicy: IfNotPresent
     database:
       name: privileges
 flights:
   service:
+    name: flights
+    replicas: 1
     port: 8060
     image:
       name: fairay/rsoi-lab5-flights
       version: latest
+      pullPolicy: IfNotPresent
     database:
       name: flights
 tickets:
   service:
+    name: tickets
+    replicas: 1
     port: 8070
     image:
       name: fairay/rsoi-lab5-tickets
       version: latest
+      pullPolicy: IfNotPresent
     database:
       name: tickets
 gateway:
   service:
+    name: gateway
+    replicas: 1
     port: 8080
     image:
       name: fairay/rsoi-lab5-gateway
       version: latest
+      pullPolicy: IfNotPresent
     ingress:
       enabled: true
       path: /api/

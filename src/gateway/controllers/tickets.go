@@ -64,10 +64,15 @@ func (ctrl *ticketsCtrl) post(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data, err := ctrl.tickets.Create(req_body.FlightNumber, r.Header.Get("Authorization"), req_body.Price, req_body.PaidFromBalance)
-	if err != nil {
-		responses.InternalError(w)
-	} else {
+	switch err {
+	case nil:
 		responses.JsonSuccess(w, data)
+	case errors.NoSeatsAvailable:
+		responses.Conflict(w, "Все места выкуплены")
+	case errors.FlightNotFound:
+		responses.RecordNotFound(w, req_body.FlightNumber)
+	default:
+		responses.InternalError(w)
 	}
 }
 

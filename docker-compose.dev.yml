@@ -1,0 +1,71 @@
+# Development override. Run it together with docker-compose.yml:
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d
+#
+# Go services use bind mounts and run from source, so code changes do not
+# require rebuilding images. Restart the changed Go service to recompile it.
+
+x-go-dev-entrypoint: &go-dev-entrypoint
+  - sh
+  - -c
+  - mkdir -p logs temp && go run .
+
+services:
+  statistics-service:
+    entrypoint: *go-dev-entrypoint
+    volumes:
+      - ./src/statistics:/app
+      - go-mod-cache:/go/pkg/mod
+      - go-build-cache:/root/.cache/go-build
+
+  identity-provider-service:
+    entrypoint: *go-dev-entrypoint
+    volumes:
+      - ./src/identity-provider:/app
+      - go-mod-cache:/go/pkg/mod
+      - go-build-cache:/root/.cache/go-build
+
+  privileges-service:
+    entrypoint: *go-dev-entrypoint
+    volumes:
+      - ./src/privileges:/app
+      - go-mod-cache:/go/pkg/mod
+      - go-build-cache:/root/.cache/go-build
+
+  flights-service:
+    entrypoint: *go-dev-entrypoint
+    volumes:
+      - ./src/flights:/app
+      - go-mod-cache:/go/pkg/mod
+      - go-build-cache:/root/.cache/go-build
+
+  tickets-service:
+    entrypoint: *go-dev-entrypoint
+    volumes:
+      - ./src/tickets:/app
+      - go-mod-cache:/go/pkg/mod
+      - go-build-cache:/root/.cache/go-build
+
+  gateway-service:
+    entrypoint: *go-dev-entrypoint
+    volumes:
+      - ./src/gateway:/app
+      - go-mod-cache:/go/pkg/mod
+      - go-build-cache:/root/.cache/go-build
+
+  frontend-service:
+    volumes:
+      - ./src/frontend:/app
+      - frontend-node-modules:/app/node_modules
+    environment:
+      CHOKIDAR_USEPOLLING: "true"
+      WATCHPACK_POLLING: "true"
+      WDS_SOCKET_PORT: "0"
+    command:
+      - sh
+      - -c
+      - npm install --silent && npm start
+
+volumes:
+  go-mod-cache:
+  go-build-cache:
+  frontend-node-modules:

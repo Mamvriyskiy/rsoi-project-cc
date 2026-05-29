@@ -1,3 +1,4 @@
+name: postgres
 version: 13
 port: 5432
 
@@ -10,7 +11,13 @@ users:
   - name: program
     password: test
 
-datases:
+databases:
+  - name: identity_provider
+    user: program
+  - name: staistics
+    user: program
+  - name: statistics
+    user: program
   - name: tickets
     user: program
   - name: privileges

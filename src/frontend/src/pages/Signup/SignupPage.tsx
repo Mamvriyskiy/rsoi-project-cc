@@ -1,8 +1,9 @@
 import React from "react";
 import theme from "styles/extendTheme";
 
-import { Box } from "@chakra-ui/react";
+import { Box, Text } from "@chakra-ui/react";
 import { NavigateFunction } from "react-router-dom";
+import { FaPlaneDeparture, FaUserPlus } from "react-icons/fa";
 
 import { NewUserRequest } from "types/Account";
 import { Create as CreateQuery } from "postAPI/accounts/Create";
@@ -78,24 +79,42 @@ class SignUpPage extends React.Component<SignUpProps> {
     }
 
     render() {
-        return <Box className={styles.login_page}>
-            <Box className={styles.input_div}>
-                <Input name="firstName" placeholder="Введите имя"
-                onInput={event => this.setFirstName(event.currentTarget.value)}/>
-                <Input name="lastName" placeholder="Введите фамилию" 
-                onInput={event => this.setLastName(event.currentTarget.value)}/>
-                <Input name="login" placeholder="Введите логин" 
-                onInput={event => this.setLogin(event.currentTarget.value)}/>
-                <Input name="password" type="password" placeholder="Введите пароль"
-                onInput={event => this.setPassword(event.currentTarget.value)}/>
-                <Input name="rep-password" type="password" placeholder="Повторите пароль"
-                onInput={event => this.setRepPassword(event.currentTarget.value)}/>
+        return <Box className={`${styles.auth_page} ${styles.signup_page}`}>
+            <Box className={styles.visual_panel}>
+                <Box className={styles.plane_badge}>
+                    <FaPlaneDeparture />
+                </Box>
+                <Text className={styles.panel_kicker}>RSOI Airlines</Text>
+                <Text className={styles.panel_title}>Создайте аккаунт пассажира</Text>
+                <Text className={styles.panel_text}>Регистрация откроет покупку билетов, бонусы и личный кабинет.</Text>
             </Box>
 
-            <Box className={styles.input_div}>
-                <RoundButton type="submit" onClick={event => this.submit(event)}>
-                    Создать аккаунт
-                </RoundButton>
+            <Box className={styles.form_card}>
+                <Box className={styles.form_title}>
+                    <FaUserPlus />
+                    <Text>Регистрация</Text>
+                </Box>
+
+                <Box className={styles.signup_grid}>
+                    <Input name="firstName" placeholder="Введите имя"
+                    onInput={event => this.setFirstName(event.currentTarget.value)}/>
+                    <Input name="lastName" placeholder="Введите фамилию"
+                    onInput={event => this.setLastName(event.currentTarget.value)}/>
+                    <Input name="login" placeholder="Введите логин"
+                    onInput={event => this.setLogin(event.currentTarget.value)}/>
+                    <Input name="password" type="password" placeholder="Введите пароль"
+                    onInput={event => this.setPassword(event.currentTarget.value)}/>
+                    <Input name="rep-password" type="password" placeholder="Повторите пароль"
+                    onInput={event => this.setRepPassword(event.currentTarget.value)}/>
+                </Box>
+
+                <Text id="undertitle" className={styles.form_message}></Text>
+
+                <Box className={styles.input_div}>
+                    <RoundButton type="submit" onClick={event => this.submit(event)}>
+                        Создать аккаунт
+                    </RoundButton>
+                </Box>
             </Box>
         </Box>
     }

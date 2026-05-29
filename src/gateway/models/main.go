@@ -49,7 +49,7 @@ func InitModels() *Models {
 	models.Client = client
 	models.Flights = NewFlightsM(client)
 	models.Privileges = NewPrivilegesM(client)
-	models.Tickets = NewTicketsM(client, models.Flights)
+	models.Tickets = NewTicketsM(client, models.Flights, models.Privileges)
 	models.Statistics = NewStatisticsM(client)
 	models.Kafka = InitKafka()
 

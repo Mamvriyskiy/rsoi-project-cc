@@ -2,10 +2,7 @@ import React from "react";
 import { Routes, Route } from "react-router";
 import { BrowserRouter } from "react-router-dom";
 import Header from ".";
-import CategoryHeader from "./Category";
 import FlightHeader from "./Recipe";
-import SearchHeader from "./Search";
-import UserHeader from "./User";
 
 
 export const HeaderRouter: React.FC<{}> = () => {
@@ -17,6 +14,7 @@ export const HeaderRouter: React.FC<{}> = () => {
             <Route path="/flights/:fligtNumber" element={<FlightHeader title="" />} />
             <Route path="/tickets" element={<Header title="Личный кабинет" />} />
             <Route path="/statistics" element={<Header title="Статистика сервиса" />} />
+            <Route path="/admin" element={<Header title="Администратор" undertitle="Управление рейсами и статистикой сервиса" />} />
 
             {/* <Route path="/users" element={<SearchHeader title="Все пользователи" />} />
             <Route path="/me/likes" element={<Header subtitle="Понравилось" title="Мне" />} />

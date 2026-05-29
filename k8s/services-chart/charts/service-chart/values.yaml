@@ -1,8 +1,11 @@
 service:
+  name:
+  replicas: 1
   port:
   image:
     name:
     version:
+    pullPolicy: IfNotPresent
   ingress:
     enabled:
     path:

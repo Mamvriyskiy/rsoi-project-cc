@@ -1,9 +1,7 @@
-# templates/zookeeper.yaml
-
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Release.Name }}-zookeeper
+  name: zookeeper
   labels:
     app: zookeeper
 spec:
@@ -20,7 +18,10 @@ spec:
         - name: zookeeper
           image: {{ .Values.zookeeper.image }}
           ports:
-            - containerPort: {{ index .Values.zookeeper.ports 0 "targetPort" }}
+{{- range .Values.zookeeper.ports }}
+            - name: {{ .name }}
+              containerPort: {{ .targetPort }}
+{{- end }}
           env:
 {{- range $key, $value := .Values.zookeeper.env }}
             - name: {{ $key }}
@@ -30,15 +31,17 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Release.Name }}-zookeeper
+  name: zookeeper
   labels:
     app: zookeeper
 spec:
   selector:
     app: zookeeper
   ports:
-    - protocol: TCP
-      port: {{ index .Values.zookeeper.ports 0 "targetPort" }}
-      targetPort: {{ index .Values.zookeeper.ports 0 "targetPort" }}
-      nodePort: {{ index .Values.zookeeper.ports 0 "publishedPort" }}
-  type: NodePort
+{{- range .Values.zookeeper.ports }}
+    - name: {{ .name }}
+      protocol: TCP
+      port: {{ .targetPort }}
+      targetPort: {{ .targetPort }}
+{{- end }}
+  type: ClusterIP

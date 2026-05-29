@@ -1,12 +1,11 @@
 import React from "react";
 import { Box, Text, Link } from "@chakra-ui/react";
+import { FaTicketAlt, FaTools } from "react-icons/fa";
 
 import styles from "../Navbar.module.scss";
 
 import AuthorIcon from "components/Icons/Author";
 import DownArrowIcon from "components/Icons/DownArrow";
-import FullLikeIcon from "components/Icons/FullLike";
-import RecipeIcon from "components/Icons/Recipes";
 import LogoutIcon from "components/Icons/Logout";
 
 export interface AuthActionsProps {
@@ -18,9 +17,9 @@ const AuthActions: React.FC<AuthActionsProps> = (props) => {
 
     return (
         <Box className={styles['user-act']}>
-            { expanded && <Link href="/me/likes"> <FullLikeIcon/> </Link> }
-            { expanded && <Link href="/me/recipes"> <RecipeIcon/> </Link> }
-            { expanded && <Link onClick={props.logout}> <LogoutIcon/> </Link> }
+            { expanded && <Link href="/tickets"> <FaTicketAlt/> <Text>Билеты</Text> </Link> }
+            { expanded && <Link href="/admin"> <FaTools/> <Text>Админка</Text> </Link> }
+            { expanded && <Link onClick={props.logout}> <LogoutIcon/> <Text>Выйти</Text> </Link> }
 
             { (!expanded) && <Box> <AuthorIcon/> </Box> }
             { (!expanded) && <Text> {props.login} </Text> }

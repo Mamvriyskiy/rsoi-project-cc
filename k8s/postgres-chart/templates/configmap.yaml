@@ -1,9 +1,10 @@
+{{- $name := .Values.name | default "postgres" -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ .Chart.Name }}-configmap
+  name: {{ $name }}-configmap
   labels:
-    app.kubernetes.io/name: {{ .Chart.Name }}-configmap
+    app.kubernetes.io/name: {{ $name }}-configmap
     app.kubernetes.io/version: "{{ .Values.version }}"
     app.kubernetes.io/component: application
     app.kubernetes.io/part-of: micro-services
@@ -15,7 +16,7 @@ data:
     ALTER ROLE {{ $user.name }} WITH LOGIN;
     {{- end }}
 
-    {{- range $database := .Values.datases }}
+    {{- range $database := .Values.databases }}
     CREATE DATABASE {{ $database.name }};
     GRANT ALL PRIVILEGES ON DATABASE {{ $database.name }} TO {{ $database.user }};
     {{- end }}
