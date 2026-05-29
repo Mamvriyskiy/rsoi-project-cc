@@ -20,6 +20,13 @@ services:
       - jenkins-home:/var/jenkins_home
       - /var/run/docker.sock:/var/run/docker.sock
       - .:/workspace/rsoi-project-cc
+    networks:
+      - default
+      - kind
+
+networks:
+  kind:
+    external: true
 
 volumes:
   jenkins-home:

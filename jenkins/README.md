@@ -5,6 +5,10 @@ Jenkins запускается локально в Docker и получает д
 
 ## Запуск
 
+Для локального deploy в kind Jenkins должен быть подключен к Docker-сети `kind`, потому что kubeconfig kind указывает на
+`https://rsoi-control-plane:6443`. Перед запуском убедись, что kind-кластер `rsoi` уже создан/запущен или что Docker-сеть
+`kind` существует.
+
 ```bash
 docker compose -f docker-compose.jenkins.yml up --build -d
 ```
