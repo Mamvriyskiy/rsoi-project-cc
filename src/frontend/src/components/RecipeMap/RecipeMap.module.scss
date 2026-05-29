@@ -1,0 +1,58 @@
+@import "/src/styles/variables.scss";
+
+.map_box {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 18px;
+}
+
+.results_bar {
+    width: 100%;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: flex-end;
+
+    p {
+        min-height: 32px;
+        display: flex;
+        align-items: center;
+        padding: 0 12px;
+        border-radius: 8px;
+        background: #e7f3f6;
+        color: #155e75;
+        font-family: 'Lora';
+        font-size: 14px;
+        font-weight: 900;
+        line-height: 1.2;
+    }
+}
+
+.empty_state {
+    width: 100%;
+    min-height: 240px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: 1px dashed #9fc4d0;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.58);
+}
+
+.empty_title {
+    font-family: 'Lora';
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.35;
+    color: #155e75;
+}
+
+.empty_text {
+    font-family: 'Lora';
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.5;
+    color: #52707a;
+}

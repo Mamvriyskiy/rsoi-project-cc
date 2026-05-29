@@ -1,0 +1,185 @@
+@import "/src/styles/variables.scss";
+
+.link_div {
+    width: 100%;
+    text-decoration: none !important;
+    color: inherit !important;
+}
+
+.main_box {
+    width: 100%;
+    min-height: 238px;
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    border: 1px solid #dde8ec;
+    border-radius: 8px;
+    background: #ffffff;
+    box-shadow: 0 16px 36px rgba(31, 55, 64, 0.08);
+    transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+
+.main_box:hover {
+    transform: translateY(-3px);
+    border-color: #9fc4d0;
+    box-shadow: 0 20px 42px rgba(31, 55, 64, 0.13);
+}
+
+.sold_out {
+    border-color: #e5d7d7;
+    background: #fffafa;
+}
+
+.card_header,
+.card_footer,
+.date_box,
+.seats_box,
+.price_badge {
+    display: flex;
+    align-items: center;
+}
+
+.card_header,
+.card_footer {
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.flight_number {
+    font-family: 'Lora';
+    font-size: 21px;
+    font-weight: 900;
+    line-height: 1.25;
+    color: #16313c;
+}
+
+.price_badge {
+    min-height: 36px;
+    padding: 0 12px;
+    gap: 6px;
+    border-radius: 8px;
+    background: #e7f3f6;
+    color: #155e75;
+
+    p {
+        font-family: 'Lora';
+        font-size: 15px;
+        font-weight: 900;
+        line-height: 1.2;
+    }
+
+    svg {
+        width: 12px;
+        height: 12px;
+    }
+}
+
+.route_box {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    align-items: center;
+    margin: 20px 0;
+}
+
+.airport_block {
+    min-width: 0;
+}
+
+.label {
+    font-family: 'Lora';
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1.4;
+    color: #667982;
+    text-transform: uppercase;
+}
+
+.airport {
+    margin-top: 5px;
+    font-family: 'Lora';
+    font-size: 17px;
+    font-weight: 900;
+    line-height: 1.3;
+    color: #16313c;
+    overflow-wrap: break-word;
+}
+
+.route_track {
+    display: grid;
+    grid-template-columns: 1fr 24px 1fr;
+    align-items: center;
+    gap: 8px;
+    width: 150px;
+    margin: 0 auto;
+    color: #155e75;
+
+    span {
+        height: 1px;
+        background: #a9c6d0;
+    }
+
+    svg {
+        width: 24px;
+        height: 24px;
+    }
+}
+
+.date_box {
+    gap: 8px;
+    color: #4c7f28;
+
+    p {
+        font-family: 'Lora';
+        font-size: 14px;
+        font-weight: 900;
+        line-height: 1.35;
+        color: #4c7f28;
+    }
+}
+
+.seats_box {
+    gap: 8px;
+    color: #155e75;
+
+    p {
+        font-family: 'Lora';
+        font-size: 14px;
+        font-weight: 900;
+        line-height: 1.35;
+        color: #155e75;
+        white-space: nowrap;
+    }
+}
+
+.select_label {
+    min-height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 13px;
+    border-radius: 8px;
+    background: #155e75;
+    color: #ffffff;
+    font-family: 'Lora';
+    font-size: 14px;
+    font-weight: 900;
+    line-height: 1.2;
+}
+
+.select_disabled {
+    background: #8c9aa0;
+}
+
+@media (max-width: 720px) {
+    .route_track {
+        width: 132px;
+    }
+
+    .card_footer {
+        align-items: stretch;
+        flex-direction: column;
+    }
+}

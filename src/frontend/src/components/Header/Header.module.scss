@@ -1,0 +1,20 @@
+@import "/src/styles/variables.scss";
+
+.header {
+    background: #dff0f5;
+    border-bottom: 1px solid #c4dce5;
+    padding: 22px 32px 28px;
+}
+
+.header_inner {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    padding: 0 !important;
+}
+
+@media (max-width: 720px) {
+    .header {
+        padding: 18px 18px 24px;
+    }
+}

@@ -1,0 +1,29 @@
+@import "/src/styles/variables.scss";
+
+.round_input {
+    @include shape($border-radius: 8px);
+
+    font-family: 'Lora';
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: #1f343b;
+    border-color: #adc9d2;
+    background: #ffffff;
+    padding: 0 14px;
+
+    &::placeholder {
+        color: #6f858d;
+        opacity: 1;
+    }
+
+    &:hover, &:focus-visible {
+        color: #1f343b;
+        border-color: #155e75;
+        box-shadow: 0 0 0 3px rgba(21, 94, 117, 0.12);
+    }
+
+    &:focus-visible {
+        outline: none;
+    }
+}

@@ -1,0 +1,133 @@
+@import "/src/styles/variables.scss";
+
+.main_box {
+    @include main-box();
+    justify-content: flex-start;
+    row-gap: 24px;
+}
+
+.filter_panel {
+    width: 100%;
+    padding: 20px;
+    border: 1px solid #d5e2e7;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.78);
+    box-shadow: 0 16px 36px rgba(31, 55, 64, 0.08);
+}
+
+.filter_header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.filter_title {
+    font-family: 'Lora';
+    font-size: 22px;
+    font-weight: 900;
+    line-height: 1.25;
+    color: #16313c;
+}
+
+.filter_hint {
+    margin-top: 3px;
+    font-family: 'Lora';
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.45;
+    color: #667982;
+}
+
+.reset_button {
+    min-height: 38px;
+    padding: 0 13px;
+    border: 1px solid #adc9d2;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #155e75;
+    font-family: 'Lora';
+    font-size: 14px;
+    font-weight: 900;
+    line-height: 1;
+    cursor: pointer;
+    transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+
+    &:hover:not(:disabled) {
+        border-color: #155e75;
+        background: #e7f3f6;
+    }
+
+    &:disabled {
+        cursor: default;
+        opacity: 0.46;
+    }
+}
+
+.filters_grid {
+    display: grid;
+    grid-template-columns: minmax(220px, 1.4fr) repeat(5, minmax(130px, 1fr));
+    gap: 12px;
+}
+
+.filter_field {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+
+    span {
+        font-family: 'Lora';
+        font-size: 13px;
+        font-weight: 900;
+        line-height: 1.35;
+        color: #5f7078;
+    }
+
+    input {
+        width: 100%;
+        min-height: 42px;
+        border: 1px solid #adc9d2;
+        border-radius: 8px;
+        padding: 0 12px;
+        background: #ffffff;
+        color: #1f343b;
+        font-family: 'Lora';
+        font-size: 15px;
+        font-weight: 700;
+        line-height: 1.35;
+
+        &::placeholder {
+            color: #82969e;
+            opacity: 1;
+        }
+
+        &:hover,
+        &:focus-visible {
+            border-color: #155e75;
+            box-shadow: 0 0 0 3px rgba(21, 94, 117, 0.12);
+            outline: none;
+        }
+    }
+}
+
+@media (max-width: 1060px) {
+    .filters_grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 720px) {
+    .filter_header {
+        flex-direction: column;
+    }
+
+    .reset_button {
+        width: 100%;
+    }
+
+    .filters_grid {
+        grid-template-columns: 1fr;
+    }
+}

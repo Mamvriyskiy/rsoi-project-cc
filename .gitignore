@@ -359,6 +359,10 @@ local.properties
 *.mod*
 !go.mod
 !**/go.mod
+!*.module.css
+!**/*.module.css
+!*.module.scss
+!**/*.module.scss
 *.cmd
 .tmp_versions/
 modules.order

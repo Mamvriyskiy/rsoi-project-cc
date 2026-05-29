@@ -1,0 +1,29 @@
+@import "/src/styles/variables.scss";
+
+@mixin round_button {
+    @include shape($border-radius: 8px);
+
+    font-family: 'Lora';
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.4;
+    background-color: #155e75;
+    color: #ffffff;
+    justify-content: center;
+    align-items: center;
+    border-color: #155e75;
+    box-shadow: 0 10px 24px rgba(21, 94, 117, 0.16);
+
+    transition-duration: 180ms;
+    &:hover {
+        color: #ffffff;
+        background: #0d4558;
+        border-color: #0d4558;
+        box-shadow: 0 12px 28px rgba(21, 94, 117, 0.2);
+        transform: translateY(-1px);
+    }
+}
+
+.round_button {
+    @include round_button;
+}
