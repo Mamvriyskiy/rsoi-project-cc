@@ -26,5 +26,6 @@ docker exec rsoi-jenkins cat /var/jenkins_home/secrets/initialAdminPassword
 4. опционально пушит образы в registry;
 5. разворачивает `postgres`, `kafka` и все сервисы в Kubernetes через Helm.
 
-Для локального kind-кластера оставь `IMAGE_REGISTRY` пустым, `PUSH_IMAGES=false`, `KUBE_CONTEXT=kind-rsoi` и `KUBECONFIG_CREDENTIALS_ID=local-kubeconfig`.
+Для локального kind-кластера оставь `IMAGE_REGISTRY` пустым, `PUSH_IMAGES=false`, `KUBE_CONTEXT=kind-rsoi`, `KUBECONFIG_CREDENTIALS_ID=local-kubeconfig` и `KIND_CLUSTER_NAME=rsoi`.
+В этом режиме Pipeline загружает собранные Docker-образы в kind через `kind load docker-image`, поэтому Kubernetes не тянет `rsoi/*` из Docker Hub.
 Для внешнего кластера укажи `IMAGE_REGISTRY`, `IMAGE_NAMESPACE`, включи `PUSH_IMAGES` и добавь kubeconfig как Jenkins file credential, затем передай его id в `KUBECONFIG_CREDENTIALS_ID`.

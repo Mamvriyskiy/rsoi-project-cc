@@ -82,6 +82,11 @@ Kubernetes через Helm.
 * `KUBE_NAMESPACE` – namespace Kubernetes, по умолчанию `rsoi`.
 * `KUBE_CONTEXT` – kubectl context, по умолчанию `kind-rsoi`.
 * `KUBECONFIG_CREDENTIALS_ID` – id Jenkins file credential с kubeconfig, по умолчанию `local-kubeconfig`.
+* `KIND_CLUSTER_NAME` – имя kind-кластера для загрузки локальных Docker-образов, по умолчанию `rsoi`.
+
+Если `IMAGE_REGISTRY` пустой и `PUSH_IMAGES=false`, Pipeline не пушит образы в Docker Hub, а загружает их напрямую в
+kind через `kind load docker-image`. Для такого режима в Kubernetes используется `imagePullPolicy: Never`, чтобы cluster
+не пытался скачать локальные образы из Docker Hub.
 
 ## Деплой в Kubernetes
 

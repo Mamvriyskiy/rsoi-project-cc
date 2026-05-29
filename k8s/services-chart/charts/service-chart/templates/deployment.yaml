@@ -11,6 +11,8 @@ metadata:
     app.kubernetes.io/managed-by: helm
 spec:
   replicas: {{ .Values.service.replicas | default 1 }}
+  strategy:
+    type: {{ .Values.service.strategy.type | default "Recreate" }}
   selector:
     matchLabels:
       app: {{ $name }}

@@ -1,6 +1,8 @@
 service:
   name:
   replicas: 1
+  strategy:
+    type: Recreate
   port:
   image:
     name:
@@ -18,8 +20,8 @@ service:
     password: test
   resources:
     requests:
-      cpu: 200m
-      memory: 512Mi
+      cpu: 50m
+      memory: 64Mi
     limits:
-      cpu: 200m
+      cpu: 500m
       memory: 512Mi

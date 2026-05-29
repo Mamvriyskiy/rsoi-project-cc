@@ -5,6 +5,7 @@ USER root
 
 ARG KUBECTL_VERSION=v1.34.1
 ARG HELM_VERSION=v3.17.3
+ARG KIND_VERSION=v0.30.0
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends ca-certificates curl git golang tar gzip \
@@ -20,6 +21,15 @@ RUN set -eu; \
     esac; \
     curl -fsSL -o /usr/local/bin/kubectl "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/${tool_arch}/kubectl" \
     && chmod +x /usr/local/bin/kubectl
+
+RUN set -eu; \
+    arch="$(dpkg --print-architecture)"; \
+    case "$arch" in \
+        amd64|arm64) tool_arch="$arch" ;; \
+        *) echo "Unsupported architecture: $arch" >&2; exit 1 ;; \
+    esac; \
+    curl -fsSL -o /usr/local/bin/kind "https://kind.sigs.k8s.io/dl/${KIND_VERSION}/kind-linux-${tool_arch}" \
+    && chmod +x /usr/local/bin/kind
 
 RUN set -eu; \
     arch="$(dpkg --print-architecture)"; \

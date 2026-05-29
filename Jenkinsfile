@@ -48,6 +48,7 @@ pipeline {
         string(name: 'KUBE_NAMESPACE', defaultValue: 'rsoi', description: 'Kubernetes namespace.')
         string(name: 'KUBE_CONTEXT', defaultValue: 'kind-rsoi', description: 'kubectl context.')
         string(name: 'KUBECONFIG_CREDENTIALS_ID', defaultValue: 'local-kubeconfig', description: 'Jenkins file credential id with kubeconfig.')
+        string(name: 'KIND_CLUSTER_NAME', defaultValue: 'rsoi', description: 'kind cluster name for loading local images.')
         string(name: 'OKTA_CLIENT_SECRET', defaultValue: '', description: 'Optional build arg for identity-provider.')
         string(name: 'OKTA_SSWS_TOKEN', defaultValue: '', description: 'Optional build arg for identity-provider.')
     }
@@ -116,6 +117,25 @@ pipeline {
             }
         }
 
+        stage('Load Images into kind') {
+            when {
+                expression {
+                    return params.DEPLOY_TO_K8S && !params.PUSH_IMAGES && !params.IMAGE_REGISTRY.trim()
+                }
+            }
+            steps {
+                script {
+                    def tag = params.IMAGE_TAG.trim() ?: env.BUILD_NUMBER
+                    def kindClusterName = params.KIND_CLUSTER_NAME?.trim() ?: 'rsoi'
+
+                    appServices.each { service ->
+                        def image = imageName(service, params.IMAGE_REGISTRY, params.IMAGE_NAMESPACE)
+                        sh "kind load docker-image '${image}:${tag}' --name '${kindClusterName}'"
+                    }
+                }
+            }
+        }
+
         stage('Deploy to Kubernetes') {
             when {
                 expression { return params.DEPLOY_TO_K8S }
@@ -128,7 +148,7 @@ pipeline {
                         def kubeNamespace = params.KUBE_NAMESPACE?.trim() ?: 'rsoi'
                         def kubeContext = params.KUBE_CONTEXT?.trim() ?: 'kind-rsoi'
                         def tag = params.IMAGE_TAG.trim() ?: env.BUILD_NUMBER
-                        def pullPolicy = params.PUSH_IMAGES ? 'Always' : 'IfNotPresent'
+                        def pullPolicy = params.PUSH_IMAGES ? 'Always' : (params.IMAGE_REGISTRY.trim() ? 'IfNotPresent' : 'Never')
                         def overrides = helmImageOverrides(appServices, params.IMAGE_REGISTRY, params.IMAGE_NAMESPACE, tag, pullPolicy)
                         def contextSwitch = "kubectl config use-context '${kubeContext}'"
 
