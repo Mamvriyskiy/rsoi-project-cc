@@ -131,6 +131,12 @@ pipeline {
                         sh """
                             set -eu
                             ${contextSwitch}
+                            
+                            echo "KUBECONFIG=\$KUBECONFIG"
+                            kubectl config current-context || true
+                            kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}{"\\n"}' || true
+                            kubectl cluster-info || true
+
                             kubectl create namespace '${params.KUBE_NAMESPACE}' --dry-run=client -o yaml | kubectl apply -f -
                             helm upgrade --install postgres k8s/postgres-chart --namespace '${params.KUBE_NAMESPACE}'
                             helm upgrade --install kafka k8s/kafka-chart --namespace '${params.KUBE_NAMESPACE}'
