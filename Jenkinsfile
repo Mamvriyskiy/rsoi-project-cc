@@ -179,10 +179,35 @@ pipeline {
 
                             rollout() {
                                 deployment="\$1"
-                                kubectl rollout status "deployment/\${deployment}" --namespace '${kubeNamespace}' --timeout=300s || {
-                                    diagnose_deployment "\${deployment}"
-                                    exit 1
-                                }
+                                deadline=\$((\$(date +%s) + 300))
+
+                                while [ "\$(date +%s)" -le "\${deadline}" ]; do
+                                    generation="\$(kubectl get deployment "\${deployment}" --namespace '${kubeNamespace}' -o jsonpath='{.metadata.generation}')"
+                                    observed="\$(kubectl get deployment "\${deployment}" --namespace '${kubeNamespace}' -o jsonpath='{.status.observedGeneration}')"
+                                    desired="\$(kubectl get deployment "\${deployment}" --namespace '${kubeNamespace}' -o jsonpath='{.spec.replicas}')"
+                                    updated="\$(kubectl get deployment "\${deployment}" --namespace '${kubeNamespace}' -o jsonpath='{.status.updatedReplicas}')"
+                                    available="\$(kubectl get deployment "\${deployment}" --namespace '${kubeNamespace}' -o jsonpath='{.status.availableReplicas}')"
+                                    unavailable="\$(kubectl get deployment "\${deployment}" --namespace '${kubeNamespace}' -o jsonpath='{.status.unavailableReplicas}')"
+
+                                    desired="\${desired:-1}"
+                                    observed="\${observed:-0}"
+                                    updated="\${updated:-0}"
+                                    available="\${available:-0}"
+                                    unavailable="\${unavailable:-0}"
+
+                                    echo "deployment/\${deployment}: generation \${observed}/\${generation}, updated \${updated}/\${desired}, available \${available}/\${desired}, unavailable \${unavailable}"
+
+                                    if [ "\${observed}" = "\${generation}" ] && [ "\${updated}" = "\${desired}" ] && [ "\${available}" = "\${desired}" ] && [ "\${unavailable}" = "0" ]; then
+                                        echo "deployment \"\${deployment}\" successfully rolled out"
+                                        return 0
+                                    fi
+
+                                    sleep 5
+                                done
+
+                                echo "deployment \"\${deployment}\" did not finish rollout before timeout"
+                                diagnose_deployment "\${deployment}"
+                                exit 1
                             }
 
                             rollout postgres
