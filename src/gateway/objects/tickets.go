@@ -24,18 +24,25 @@ type TicketPurchaseResponse struct {
 }
 
 func NewTicketPurchaseResponse(flight *FlightResponse, ticket *TicketCreateResponse, privilege *AddHistoryResponce) *TicketPurchaseResponse {
-	return &TicketPurchaseResponse{
-		TicketUid:     ticket.TicketUid,
-		FlightNumber:  flight.FlightNumber,
-		FromAirport:   flight.FromAirport,
-		ToAirport:     flight.ToAirport,
-		Date:          flight.Date,
-		Status:        ticket.Status,
-		Price:         flight.Price,
-		PaidByMoney:   privilege.PaidByMoney,
-		PaidByBonuses: privilege.PaidByBonuses,
-		Privilege:     privilege.Privilege,
+	response := &TicketPurchaseResponse{
+		TicketUid:    ticket.TicketUid,
+		FlightNumber: flight.FlightNumber,
+		FromAirport:  flight.FromAirport,
+		ToAirport:    flight.ToAirport,
+		Date:         flight.Date,
+		Status:       ticket.Status,
+		Price:        flight.Price,
 	}
+
+	if privilege == nil {
+		response.PaidByMoney = flight.Price
+		return response
+	}
+
+	response.PaidByMoney = privilege.PaidByMoney
+	response.PaidByBonuses = privilege.PaidByBonuses
+	response.Privilege = privilege.Privilege
+	return response
 }
 
 type TicketCreateRequest struct {

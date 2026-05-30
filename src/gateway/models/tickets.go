@@ -138,6 +138,11 @@ func (model *TicketsM) Create(flight_number string, authHeader string, price int
 	})
 	if err != nil {
 		utils.Logger.Println(err.Error())
+		if !from_balance {
+			utils.Logger.Printf("privileges-service failed after ticket %s was created; purchase is kept because bonus payment was not used", ticket.TicketUid)
+			return objects.NewTicketPurchaseResponse(flight, ticket, nil), nil
+		}
+
 		if deleteErr := model.delete(ticket.TicketUid, authHeader); deleteErr != nil {
 			utils.Logger.Println(deleteErr.Error())
 		}
