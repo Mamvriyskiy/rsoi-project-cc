@@ -23,6 +23,14 @@ type TicketCardProps = {
     onCancel: (ticketUid: string) => void;
 };
 
+type TicketFilter = "ALL" | "PAID" | "CANCELED";
+
+const ticketFilters: Array<{ value: TicketFilter; label: string }> = [
+    { value: "ALL", label: "Все" },
+    { value: "PAID", label: "Активные" },
+    { value: "CANCELED", label: "Отмененные" },
+];
+
 const emptyPrivilege: Privilege = {
     balance: 0,
     status: "BRONZE",
@@ -276,6 +284,7 @@ const AllTicketsPage = () => {
     const [privilege, setPrivilege] = useState<Privilege>(emptyPrivilege);
     const [loading, setLoading] = useState(true);
     const [cancelingUid, setCancelingUid] = useState<string>();
+    const [ticketFilter, setTicketFilter] = useState<TicketFilter>("ALL");
     const claims = useMemo(() => decodeToken(), []);
 
     const getProfileInfo = async () => {
@@ -318,6 +327,7 @@ const AllTicketsPage = () => {
     };
 
     const activeTickets = tickets.filter((ticket) => ticket.status === "PAID");
+    const filteredTickets = tickets.filter((ticket) => ticketFilter === "ALL" || ticket.status === ticketFilter);
     const history = [...(privilege.history || [])].sort((left, right) => {
         const leftTime = new Date(left.date).getTime();
         const rightTime = new Date(right.date).getTime();
@@ -414,7 +424,7 @@ const AllTicketsPage = () => {
                             <Text className={styles.section_title}>Мои билеты</Text>
                             <Text className={styles.section_subtitle}>Все активные и отмененные бронирования</Text>
                         </Box>
-                        <Badge className={styles.counter_badge}>{tickets.length}</Badge>
+                        <Badge className={styles.counter_badge}>{filteredTickets.length}</Badge>
                     </HStack>
 
                     {tickets.length === 0 && (
@@ -425,8 +435,32 @@ const AllTicketsPage = () => {
                         </Box>
                     )}
 
+                    {tickets.length > 0 && (
+                        <Box className={styles.ticket_filters}>
+                            {ticketFilters.map((filter) => (
+                                <button
+                                    key={filter.value}
+                                    type="button"
+                                    className={`${styles.filter_button} ${ticketFilter === filter.value ? styles.filter_active : ""}`}
+                                    aria-pressed={ticketFilter === filter.value}
+                                    onClick={() => setTicketFilter(filter.value)}
+                                >
+                                    {filter.label}
+                                </button>
+                            ))}
+                        </Box>
+                    )}
+
+                    {tickets.length > 0 && filteredTickets.length === 0 && (
+                        <Box className={styles.empty_state}>
+                            <FaTicketAlt />
+                            <Text className={styles.empty_title}>Нет билетов в этом фильтре</Text>
+                            <Text className={styles.empty_text}>Выберите другой статус бронирования.</Text>
+                        </Box>
+                    )}
+
                     <Box className={styles.tickets_list}>
-                        {tickets.map((ticket) => (
+                        {filteredTickets.map((ticket) => (
                             <TicketCard
                                 key={ticket.ticketUid}
                                 ticket={ticket}

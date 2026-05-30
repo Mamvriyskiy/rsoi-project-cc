@@ -266,6 +266,45 @@
     gap: 14px;
 }
 
+.ticket_filters {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    min-height: 42px;
+    padding: 4px;
+    margin-bottom: 14px;
+    border: 1px solid #d9e8ed;
+    border-radius: 8px;
+    background: #edf6f8;
+}
+
+.filter_button {
+    min-width: 0;
+    min-height: 34px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: #516b75;
+    font-family: 'Lora';
+    font-size: 13px;
+    font-weight: 900;
+    line-height: 1.2;
+    cursor: pointer;
+    transition: background 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.filter_button:hover {
+    color: #155e75;
+    background: rgba(255, 255, 255, 0.62);
+}
+
+.filter_active {
+    color: #16313c;
+    background: #ffffff;
+    box-shadow: 0 6px 16px rgba(31, 55, 64, 0.1);
+}
+
 .ticket_card {
     padding: 20px;
 }
