@@ -19,6 +19,10 @@ func InitPrivileges(r *mux.Router, privileges *models.PrivilegesM) {
 }
 
 func (ctrl *privilegeCtrl) fetch(w http.ResponseWriter, r *http.Request) {
-	data := ctrl.privileges.Fetch(r.Header.Get("Authorization"))
+	data, err := ctrl.privileges.Fetch(r.Header.Get("Authorization"))
+	if err != nil {
+		respondInternalOrUnavailable(w, err)
+		return
+	}
 	responses.JsonSuccess(w, data)
 }

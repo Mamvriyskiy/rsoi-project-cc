@@ -115,11 +115,15 @@ func (ctrl *authCtrl) register(w http.ResponseWriter, r *http.Request) {
 	register_resp, err := ctrl.client.Do(req)
 	if err != nil {
 		log.Println(err.Error())
-		responses.InternalError(w)
+		responses.ServiceUnavailable(w, fmt.Sprintf("identity-provider-service unavailable: %s", err.Error()))
 		return
 	}
 
 	defer register_resp.Body.Close()
+	if register_resp.StatusCode >= http.StatusInternalServerError {
+		responses.ServiceUnavailable(w, fmt.Sprintf("identity-provider-service returned %d", register_resp.StatusCode))
+		return
+	}
 	if register_resp.StatusCode != http.StatusOK {
 		responses.ForwardResponse(w, register_resp)
 		return
@@ -131,7 +135,7 @@ func (ctrl *authCtrl) register(w http.ResponseWriter, r *http.Request) {
 	)
 	if err != nil {
 		log.Println(err.Error())
-		responses.InternalError(w)
+		respondInternalOrUnavailable(w, err)
 		return
 	}
 
@@ -161,7 +165,12 @@ func (ctrl *authCtrl) authorize(w http.ResponseWriter, r *http.Request) {
 	resp, err := ctrl.client.Do(req)
 	if err != nil {
 		log.Println(err.Error())
-		responses.InternalError(w)
+		responses.ServiceUnavailable(w, fmt.Sprintf("identity-provider-service unavailable: %s", err.Error()))
+		return
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= http.StatusInternalServerError {
+		responses.ServiceUnavailable(w, fmt.Sprintf("identity-provider-service returned %d", resp.StatusCode))
 		return
 	}
 	if resp.StatusCode == http.StatusOK {

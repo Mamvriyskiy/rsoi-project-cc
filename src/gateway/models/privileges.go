@@ -3,7 +3,7 @@ package models
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
+	stderrors "errors"
 	"fmt"
 	"gateway/objects"
 	"gateway/utils"
@@ -13,11 +13,11 @@ import (
 )
 
 type PrivilegesM struct {
-	client *http.Client
+	client *downstreamClient
 }
 
 func NewPrivilegesM(client *http.Client) *PrivilegesM {
-	return &PrivilegesM{client: client}
+	return &PrivilegesM{client: newDownstreamClient("privileges-service", client)}
 }
 
 func (model *PrivilegesM) NewPrivilege(user string, authHeader string) error {
@@ -31,9 +31,9 @@ func (model *PrivilegesM) NewPrivilege(user string, authHeader string) error {
 	)
 	req.Header.Add("Authorization", authHeader)
 
-	resp, err := model.client.Do(req)
+	resp, err := model.client.Do(req, false)
 	if err != nil {
-		panic("client: error making http request\n")
+		return err
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
@@ -42,33 +42,39 @@ func (model *PrivilegesM) NewPrivilege(user string, authHeader string) error {
 	}
 
 	if resp.StatusCode != http.StatusCreated {
-		return errors.New(string(body))
+		if isDependencyStatus(resp.StatusCode) {
+			return downstreamStatusError("privileges-service", resp.StatusCode, body)
+		}
+		return stderrors.New(string(body))
 	}
 	return nil
 }
 
-func (model *PrivilegesM) Fetch(authHeader string) *objects.PrivilegeInfoResponse {
+func (model *PrivilegesM) Fetch(authHeader string) (*objects.PrivilegeInfoResponse, error) {
 	req, _ := http.NewRequest("GET", fmt.Sprintf("%s/api/v1/privilege", utils.Config.Endpoints.Privileges), nil)
 	req.Header.Add("Authorization", authHeader)
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := model.client.Do(req, true)
 	if err != nil {
-		panic("client: error making http request\n")
+		return nil, err
 	}
 	defer resp.Body.Close()
 
 	data := &objects.PrivilegeInfoResponse{}
 	body, _ := ioutil.ReadAll(resp.Body)
-	json.Unmarshal(body, data)
-	return data
+	if resp.StatusCode != http.StatusOK {
+		return nil, downstreamStatusError("privileges-service", resp.StatusCode, body)
+	}
+	if err := json.Unmarshal(body, data); err != nil {
+		return nil, err
+	}
+	return data, nil
 }
 
 func (model *PrivilegesM) AddTicket(authHeader string, request *objects.AddHistoryRequest) (*objects.AddHistoryResponce, error) {
 	req_body, _ := json.Marshal(request)
 	req, _ := http.NewRequest("POST", fmt.Sprintf("%s/api/v1/history", utils.Config.Endpoints.Privileges), bytes.NewBuffer(req_body))
 	req.Header.Add("Authorization", authHeader)
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := model.client.Do(req, false)
 	if err != nil {
 		return nil, err
 	}
@@ -79,14 +85,27 @@ func (model *PrivilegesM) AddTicket(authHeader string, request *objects.AddHisto
 	if err != nil {
 		return nil, err
 	}
-	json.Unmarshal(body, data)
+	if resp.StatusCode != http.StatusOK {
+		return nil, downstreamStatusError("privileges-service", resp.StatusCode, body)
+	}
+	if err := json.Unmarshal(body, data); err != nil {
+		return nil, err
+	}
 	return data, nil
 }
 
 func (model *PrivilegesM) DeleteTicket(authHeader string, ticket_uid string) error {
 	req, _ := http.NewRequest("DELETE", fmt.Sprintf("%s/api/v1/history/%s", utils.Config.Endpoints.Privileges, ticket_uid), nil)
 	req.Header.Add("Authorization", authHeader)
-	client := &http.Client{}
-	_, err := client.Do(req)
-	return err
+	resp, err := model.client.Do(req, false)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
+		body, _ := ioutil.ReadAll(resp.Body)
+		return downstreamStatusError("privileges-service", resp.StatusCode, body)
+	}
+	return nil
 }

@@ -12,6 +12,17 @@ import (
 )
 
 func sendRequestStatToKafka(stat *objects.RequestStat, topic string, producer sarama.SyncProducer) {
+	if producer == nil {
+		log.Printf("Kafka producer is unavailable, request stat skipped")
+		return
+	}
+
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("Recovered while sending request stat to Kafka: %v", r)
+		}
+	}()
+
 	statBytes, err := json.Marshal(stat)
 	if err != nil {
 		log.Printf("Error encoding request stats")

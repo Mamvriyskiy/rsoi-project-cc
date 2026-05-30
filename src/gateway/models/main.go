@@ -44,7 +44,7 @@ func InitKafka() *KafkaSettings {
 
 func InitModels() *Models {
 	models := new(Models)
-	client := &http.Client{}
+	client := &http.Client{Timeout: downstreamRequestTimeout}
 
 	models.Client = client
 	models.Flights = NewFlightsM(client)

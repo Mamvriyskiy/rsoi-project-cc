@@ -32,7 +32,7 @@ func (ctrl *ticketsCtrl) me(w http.ResponseWriter, r *http.Request) {
 
 	data, err := ctrl.tickets.FetchUser(r.Header.Get("Authorization"))
 	if err != nil {
-		responses.InternalError(w)
+		respondInternalOrUnavailable(w, err)
 	} else {
 		responses.JsonSuccess(w, data)
 	}
@@ -45,7 +45,7 @@ func (ctrl *ticketsCtrl) fetch(w http.ResponseWriter, r *http.Request) {
 
 	data, err := ctrl.tickets.Fetch(r.Header.Get("Authorization"))
 	if err != nil {
-		responses.InternalError(w)
+		respondInternalOrUnavailable(w, err)
 	} else {
 		responses.JsonSuccess(w, data)
 	}
@@ -72,7 +72,7 @@ func (ctrl *ticketsCtrl) post(w http.ResponseWriter, r *http.Request) {
 	case errors.FlightNotFound:
 		responses.RecordNotFound(w, req_body.FlightNumber)
 	default:
-		responses.InternalError(w)
+		respondInternalOrUnavailable(w, err)
 	}
 }
 
@@ -93,7 +93,7 @@ func (ctrl *ticketsCtrl) get(w http.ResponseWriter, r *http.Request) {
 	case errors.ForbiddenTicket:
 		responses.Forbidden(w)
 	default:
-		responses.RecordNotFound(w, ticket_uid)
+		respondNotFoundOrUnavailable(w, err, ticket_uid)
 	}
 }
 
@@ -115,6 +115,6 @@ func (ctrl *ticketsCtrl) delete(w http.ResponseWriter, r *http.Request) {
 	case errors.ForbiddenTicket:
 		responses.Forbidden(w)
 	default:
-		responses.RecordNotFound(w, ticket_uid)
+		respondNotFoundOrUnavailable(w, err, ticket_uid)
 	}
 }

@@ -1,7 +1,6 @@
 package models
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"gateway/objects"
@@ -12,14 +11,14 @@ import (
 )
 
 type StatisticsM struct {
-	client *http.Client
+	client *downstreamClient
 }
 
 func NewStatisticsM(client *http.Client) *StatisticsM {
-	return &StatisticsM{client: client}
+	return &StatisticsM{client: newDownstreamClient("statistics-service", client)}
 }
 
-func (model *StatisticsM) Fetch(beginTime time.Time, endTime time.Time, authHeader string) *objects.FetchResponse {
+func (model *StatisticsM) Fetch(beginTime time.Time, endTime time.Time, authHeader string) (*objects.FetchResponse, error) {
 	req, _ := http.NewRequest("GET", fmt.Sprintf("%s/api/v1/requests", utils.Config.Endpoints.Statistics), nil)
 	q := req.URL.Query()
 	q.Add("begin_time", beginTime.Format(time.RFC3339))
@@ -27,17 +26,20 @@ func (model *StatisticsM) Fetch(beginTime time.Time, endTime time.Time, authHead
 	req.URL.RawQuery = q.Encode()
 	req.Header.Add("Authorization", authHeader)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	req = req.WithContext(ctx)
-
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := model.client.Do(req, true)
 	if err != nil {
-		panic("client: error making http request\n")
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, _ := ioutil.ReadAll(resp.Body)
+	if resp.StatusCode != http.StatusOK {
+		return nil, downstreamStatusError("statistics-service", resp.StatusCode, body)
 	}
 
 	data := &objects.FetchResponse{}
-	body, _ := ioutil.ReadAll(resp.Body)
-	json.Unmarshal(body, data)
-	return data
+	if err := json.Unmarshal(body, data); err != nil {
+		return nil, err
+	}
+	return data, nil
 }

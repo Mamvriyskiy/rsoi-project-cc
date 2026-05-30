@@ -28,7 +28,11 @@ func (ctrl *flightCtrl) fetch(w http.ResponseWriter, r *http.Request) {
 	queryParams := r.URL.Query()
 	page, _ := strconv.Atoi(queryParams.Get("page"))
 	page_size, _ := strconv.Atoi(queryParams.Get("size"))
-	data := ctrl.flights.Fetch(page, page_size, r.Header.Get("Authorization"))
+	data, err := ctrl.flights.Fetch(page, page_size, r.Header.Get("Authorization"))
+	if err != nil {
+		respondInternalOrUnavailable(w, err)
+		return
+	}
 	responses.JsonSuccess(w, data)
 }
 
@@ -43,7 +47,7 @@ func (ctrl *flightCtrl) get(w http.ResponseWriter, r *http.Request) {
 	case errors.FlightNotFound:
 		responses.RecordNotFound(w, flight_number)
 	default:
-		responses.InternalError(w)
+		respondInternalOrUnavailable(w, err)
 	}
 }
 
@@ -57,7 +61,7 @@ func (ctrl *flightCtrl) create(w http.ResponseWriter, r *http.Request) {
 
 	data, err := ctrl.flights.Create(req_body, r.Header.Get("Authorization"))
 	if err != nil {
-		responses.InternalError(w)
+		respondInternalOrUnavailable(w, err)
 		return
 	}
 

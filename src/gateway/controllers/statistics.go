@@ -41,6 +41,10 @@ func (ctrl *statisticsCtrl) fetch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := ctrl.statistics.Fetch(begin_time, end_time, r.Header.Get("Authorization"))
+	data, err := ctrl.statistics.Fetch(begin_time, end_time, r.Header.Get("Authorization"))
+	if err != nil {
+		respondInternalOrUnavailable(w, err)
+		return
+	}
 	responses.JsonSuccess(w, data)
 }

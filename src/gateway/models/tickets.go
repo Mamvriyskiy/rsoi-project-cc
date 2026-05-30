@@ -12,7 +12,7 @@ import (
 )
 
 type TicketsM struct {
-	client *http.Client
+	client *downstreamClient
 
 	flights    *FlightsM
 	privileges *PrivilegesM
@@ -20,7 +20,7 @@ type TicketsM struct {
 
 func NewTicketsM(client *http.Client, flights *FlightsM, privileges *PrivilegesM) *TicketsM {
 	return &TicketsM{
-		client:     client,
+		client:     newDownstreamClient("tickets-service", client),
 		flights:    flights,
 		privileges: privileges,
 	}
@@ -32,10 +32,16 @@ func (model *TicketsM) FetchUser(authHeader string) (*objects.UserInfoResponse, 
 	if err != nil {
 		return nil, err
 	}
-	flights := model.flights.Fetch(1, 100, authHeader).Items
-	data.Tickets = objects.MakeTicketResponseArr(tickets, flights)
+	flights, err := model.flights.Fetch(1, 100, authHeader)
+	if err != nil {
+		return nil, err
+	}
+	data.Tickets = objects.MakeTicketResponseArr(tickets, flights.Items)
 
-	privilege := model.privileges.Fetch(authHeader)
+	privilege, err := model.privileges.Fetch(authHeader)
+	if err != nil {
+		return nil, err
+	}
 	data.Privilege = objects.PrivilegeInfoResponse{
 		Balance: privilege.Balance,
 		Status:  privilege.Status,
@@ -47,18 +53,24 @@ func (model *TicketsM) FetchUser(authHeader string) (*objects.UserInfoResponse, 
 func (model *TicketsM) fetch(authHeader string) (objects.TicketArr, error) {
 	req, _ := http.NewRequest("GET", fmt.Sprintf("%s/api/v1/tickets", utils.Config.Endpoints.Tickets), nil)
 	req.Header.Set("Authorization", authHeader)
-	resp, err := model.client.Do(req)
+	resp, err := model.client.Do(req, true)
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 
 	data := new(objects.TicketArr)
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, downstreamStatusError("tickets-service", resp.StatusCode, body)
+	}
 
-	json.Unmarshal(body, data)
+	if err := json.Unmarshal(body, data); err != nil {
+		return nil, err
+	}
 	return *data, nil
 }
 
@@ -68,8 +80,11 @@ func (model *TicketsM) Fetch(authHeader string) ([]objects.TicketResponse, error
 		return nil, err
 	}
 
-	flights := model.flights.Fetch(1, 100, authHeader).Items
-	return objects.MakeTicketResponseArr(tickets, flights), nil
+	flights, err := model.flights.Fetch(1, 100, authHeader)
+	if err != nil {
+		return nil, err
+	}
+	return objects.MakeTicketResponseArr(tickets, flights.Items), nil
 }
 
 func (model *TicketsM) create(flight_number string, price int, authHeader string) (*objects.TicketCreateResponse, error) {
@@ -77,7 +92,7 @@ func (model *TicketsM) create(flight_number string, price int, authHeader string
 	req, _ := http.NewRequest("POST", fmt.Sprintf("%s/api/v1/tickets", utils.Config.Endpoints.Tickets), bytes.NewBuffer(req_body))
 	req.Header.Add("Authorization", authHeader)
 
-	if resp, err := model.client.Do(req); err != nil {
+	if resp, err := model.client.Do(req, false); err != nil {
 		return nil, err
 	} else {
 		defer resp.Body.Close()
@@ -86,7 +101,7 @@ func (model *TicketsM) create(flight_number string, price int, authHeader string
 			return nil, err
 		}
 		if resp.StatusCode != http.StatusOK {
-			return nil, fmt.Errorf("tickets service returned %d: %s", resp.StatusCode, string(body))
+			return nil, downstreamStatusError("tickets-service", resp.StatusCode, body)
 		}
 
 		data := &objects.TicketCreateResponse{}
@@ -138,13 +153,19 @@ func (model *TicketsM) Create(flight_number string, authHeader string, price int
 func (model *TicketsM) find(ticket_uid string, authHeader string) (*objects.Ticket, error) {
 	req, _ := http.NewRequest("GET", fmt.Sprintf("%s/api/v1/tickets/%s", utils.Config.Endpoints.Tickets, ticket_uid), nil)
 	req.Header.Add("Authorization", authHeader)
-	resp, err := model.client.Do(req)
+	resp, err := model.client.Do(req, true)
 	if err != nil {
 		return nil, err
 	} else {
+		defer resp.Body.Close()
 		data := &objects.Ticket{}
 		body, _ := ioutil.ReadAll(resp.Body)
-		json.Unmarshal(body, data)
+		if resp.StatusCode != http.StatusOK {
+			return nil, downstreamStatusError("tickets-service", resp.StatusCode, body)
+		}
+		if err := json.Unmarshal(body, data); err != nil {
+			return nil, err
+		}
 		return data, nil
 	}
 }
@@ -168,8 +189,17 @@ func (model *TicketsM) Find(ticket_uid string, username string, authHeader strin
 func (model *TicketsM) delete(ticket_uid string, authHeader string) error {
 	req, _ := http.NewRequest("DELETE", fmt.Sprintf("%s/api/v1/tickets/%s", utils.Config.Endpoints.Tickets, ticket_uid), nil)
 	req.Header.Add("Authorization", authHeader)
-	_, err := model.client.Do(req)
-	return err
+	resp, err := model.client.Do(req, false)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
+		body, _ := ioutil.ReadAll(resp.Body)
+		return downstreamStatusError("tickets-service", resp.StatusCode, body)
+	}
+	return nil
 }
 
 func (model *TicketsM) Delete(ticket_uid string, username string, authHeader string) error {

@@ -22,6 +22,12 @@ func InternalError(w http.ResponseWriter) {
 	json.NewEncoder(w).Encode("Internal error")
 }
 
+func ServiceUnavailable(w http.ResponseWriter, msg string) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.WriteHeader(http.StatusServiceUnavailable)
+	json.NewEncoder(w).Encode(msg)
+}
+
 func BadRequest(w http.ResponseWriter, msg string) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusBadRequest)

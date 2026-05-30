@@ -2,7 +2,6 @@ package models
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"gateway/errors"
@@ -12,18 +11,17 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"time"
 )
 
 type FlightsM struct {
-	client *http.Client
+	client *downstreamClient
 }
 
 func NewFlightsM(client *http.Client) *FlightsM {
-	return &FlightsM{client: client}
+	return &FlightsM{client: newDownstreamClient("flights-service", client)}
 }
 
-func (model *FlightsM) Fetch(page int, page_size int, authHeader string) *objects.PaginationResponse {
+func (model *FlightsM) Fetch(page int, page_size int, authHeader string) (*objects.PaginationResponse, error) {
 	req, _ := http.NewRequest("GET", fmt.Sprintf("%s/api/v1/flights", utils.Config.Endpoints.Flights), nil)
 	q := req.URL.Query()
 	q.Add("page", fmt.Sprintf("%d", page))
@@ -31,27 +29,30 @@ func (model *FlightsM) Fetch(page int, page_size int, authHeader string) *object
 	req.URL.RawQuery = q.Encode()
 	req.Header.Add("Authorization", authHeader)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	req = req.WithContext(ctx)
-
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := model.client.Do(req, true)
 	if err != nil {
-		panic("client: error making http request\n")
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, _ := ioutil.ReadAll(resp.Body)
+	if resp.StatusCode != http.StatusOK {
+		return nil, downstreamStatusError("flights-service", resp.StatusCode, body)
 	}
 
 	data := &objects.PaginationResponse{}
-	body, _ := ioutil.ReadAll(resp.Body)
-	json.Unmarshal(body, data)
+	if err := json.Unmarshal(body, data); err != nil {
+		return nil, err
+	}
 
 	log.Printf("flights: %v", data)
-	return data
+	return data, nil
 }
 
 func (model *FlightsM) Find(flight_number string, authHeader string) (*objects.FlightResponse, error) {
 	req, _ := http.NewRequest("GET", fmt.Sprintf("%s/api/v1/flights/%s", utils.Config.Endpoints.Flights, url.PathEscape(flight_number)), nil)
 	req.Header.Add("Authorization", authHeader)
-	resp, err := model.client.Do(req)
+	resp, err := model.client.Do(req, true)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +63,7 @@ func (model *FlightsM) Find(flight_number string, authHeader string) (*objects.F
 	}
 	if resp.StatusCode != http.StatusOK {
 		body, _ := ioutil.ReadAll(resp.Body)
-		return nil, fmt.Errorf("flights service returned %d: %s", resp.StatusCode, string(body))
+		return nil, downstreamStatusError("flights-service", resp.StatusCode, body)
 	}
 
 	data := &objects.FlightResponse{}
@@ -77,7 +78,7 @@ func (model *FlightsM) Create(flight *objects.FlightCreateRequest, authHeader st
 	req.Header.Add("Authorization", authHeader)
 	req.Header.Add("Content-Type", "application/json")
 
-	resp, err := model.client.Do(req)
+	resp, err := model.client.Do(req, false)
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +86,7 @@ func (model *FlightsM) Create(flight *objects.FlightCreateRequest, authHeader st
 
 	body, _ := ioutil.ReadAll(resp.Body)
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("flights service returned %d: %s", resp.StatusCode, string(body))
+		return nil, downstreamStatusError("flights-service", resp.StatusCode, body)
 	}
 
 	data := &objects.FlightResponse{}
@@ -109,7 +110,7 @@ func (model *FlightsM) updateSeat(flight_number string, authHeader string, actio
 	)
 	req.Header.Add("Authorization", authHeader)
 
-	resp, err := model.client.Do(req)
+	resp, err := model.client.Do(req, false)
 	if err != nil {
 		return nil, err
 	}
@@ -127,6 +128,6 @@ func (model *FlightsM) updateSeat(flight_number string, authHeader string, actio
 		return nil, errors.NoSeatsAvailable
 	default:
 		body, _ := ioutil.ReadAll(resp.Body)
-		return nil, fmt.Errorf("flights service returned %d: %s", resp.StatusCode, string(body))
+		return nil, downstreamStatusError("flights-service", resp.StatusCode, body)
 	}
 }
